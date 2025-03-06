@@ -1,23 +1,33 @@
-from flask import Flask, jsonify
 import pandas as pd
-import os
+import requests
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-# Define a relative CSV file path (place your CSV in the same directory as app.py)
-CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "IPO_DETAILS.csv")
+# Google Drive File ID
+FILE_ID = "1VfT1uZwvwWx2W5QcllSDo_xbr9j673CA"
+
+# Function to download CSV from Google Drive
+def download_csv_from_drive(file_id):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        with open("IPO_DETAILS - IPO.csv", "wb") as f:
+            f.write(response.content)
+        return "IPO_DETAILS - IPO.csv"
+    else:
+        return None
 
 @app.route('/data', methods=['GET'])
 def get_data():
     try:
-        # Check if the file exists
-        if not os.path.exists(CSV_FILE_PATH):
-            return jsonify({"error": "CSV file not found"}), 404
+        csv_path = download_csv_from_drive(FILE_ID)
+        
+        if not csv_path:
+            return jsonify({"error": "Failed to download CSV from Google Drive"}), 500
 
-        # Read CSV into DataFrame
-        df = pd.read_csv(CSV_FILE_PATH)
-
-        # Convert DataFrame to JSON (handling NaN values as None)
+        df = pd.read_csv(csv_path)
         json_data = df.to_dict(orient='records')
 
         return jsonify(json_data)
