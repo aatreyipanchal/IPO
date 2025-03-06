@@ -1,14 +1,19 @@
 from flask import Flask, jsonify
 import pandas as pd
+import os
 
 app = Flask(__name__)
 
-# Define the CSV file path
-CSV_FILE_PATH = r"C:\Users\DELL\Downloads\IPO_DETAILS - IPO.csv"
+# Define a relative CSV file path (place your CSV in the same directory as app.py)
+CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "IPO_DETAILS.csv")
 
 @app.route('/data', methods=['GET'])
 def get_data():
     try:
+        # Check if the file exists
+        if not os.path.exists(CSV_FILE_PATH):
+            return jsonify({"error": "CSV file not found"}), 404
+
         # Read CSV into DataFrame
         df = pd.read_csv(CSV_FILE_PATH)
 
